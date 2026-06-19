@@ -296,8 +296,10 @@ function showLoginError(msg){
   const b = document.getElementById('loginError');
   b.textContent = msg; b.classList.remove('hidden');
 }
+let booted = false;
 async function handleSession(session){
-  if(!session){ showView('login'); return; }
+  console.log('[firehouse] handleSession', session ? session.user.email : 'no session');
+  if(!session){ if(!booted) showView('login'); return; }
   const email = (session.user.email||'').toLowerCase();
   if(!email.endsWith('@'+ALLOWED_DOMAIN)){
     await sb.auth.signOut();
@@ -305,14 +307,24 @@ async function handleSession(session){
     showLoginError(`Access is limited to @${ALLOWED_DOMAIN} accounts. ${email} is not allowed.`);
     return;
   }
+  if(booted) return;            // already initialised; ignore duplicate auth events
+  booted = true;
   currentUser = email;
-  currentName = session.user.user_metadata.full_name || session.user.user_metadata.name || email.split('@')[0];
+  currentName = (session.user.user_metadata && (session.user.user_metadata.full_name || session.user.user_metadata.name)) || email.split('@')[0];
   isAdmin = ADMIN_EMAILS.map(s=>s.toLowerCase()).includes(email);
   document.getElementById('whoName').textContent = currentName;
   document.getElementById('tabAdmin').classList.toggle('hidden', !isAdmin);
-  await refreshEntries();
+  // show the app immediately; load data in the background so a slow/failed
+  // fetch can never trap us on the Loading screen
   showView('app');
   showTab('track');
+  try {
+    await refreshEntries();
+    showTab('track');
+  } catch(err){
+    console.error('[firehouse] data load failed', err);
+    alert('Signed in, but could not load saved entries. If this is the first run, make sure the database SQL from SETUP.md has been applied. Details: ' + (err && err.message));
+  }
 }
 function showView(v){
   document.getElementById('loginView').classList.toggle('hidden', v!=='login');
@@ -532,8 +544,13 @@ function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&l
 /* ---------- Boot ---------- */
 document.getElementById('customer').addEventListener('keydown', e=>{ if(e.key==='Enter' && !timer) startTimer(); });
 showView('loading');
-sb.auth.getSession().then(({data})=>handleSession(data.session));
-sb.auth.onAuthStateChange((_e, session)=>handleSession(session));
+console.log('[firehouse] boot; url=', SUPABASE_URL);
+sb.auth.onAuthStateChange((evt, session)=>{ console.log('[firehouse] authEvent', evt); handleSession(session); });
+sb.auth.getSession()
+  .then(({data})=>handleSession(data.session))
+  .catch(err=>{ console.error('[firehouse] getSession failed', err); if(!booted) showView('login'); });
+// safety net: never stay stuck on Loading
+setTimeout(()=>{ if(!booted && document.getElementById('appView').classList.contains('hidden')){ console.warn('[firehouse] boot timeout -> login'); showView('login'); } }, 6000);
 </script>
 </body>
 </html>
