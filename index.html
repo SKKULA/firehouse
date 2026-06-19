@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Support Time Tracker</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1f232c; --line:#2a2f3a;
+    --text:#e7eaf0; --muted:#9aa3b2; --accent:#5b8cff; --accent2:#2dd4bf;
+    --danger:#ff5b6e; --warn:#ffb020; --ok:#34d399;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 20px; border-bottom:1px solid var(--line); background:var(--panel);
+    position:sticky; top:0; z-index:10;
+  }
+  .brand{font-weight:700; font-size:16px; letter-spacing:.2px}
+  .brand span{color:var(--accent)}
+  .who{display:flex; align-items:center; gap:12px; font-size:14px; color:var(--muted)}
+  .who b{color:var(--text)}
+  button{
+    font:inherit; cursor:pointer; border:1px solid var(--line); background:var(--panel2);
+    color:var(--text); padding:9px 14px; border-radius:10px; transition:.15s;
+  }
+  button:hover{border-color:#3a4150}
+  button.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
+  button.primary:hover{filter:brightness(1.08)}
+  button.danger{background:var(--danger); border-color:var(--danger); color:#fff; font-weight:600}
+  button.ghost{background:transparent}
+  button:disabled{opacity:.45; cursor:not-allowed}
+  .wrap{max-width:1000px; margin:0 auto; padding:24px 20px 80px}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:20px}
+  label{display:block; font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:6px}
+  input,select{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--text); font:inherit;
+  }
+  input:focus,select:focus{outline:none; border-color:var(--accent)}
+  .grid{display:grid; gap:14px}
+  .grid.two{grid-template-columns:1fr 1fr}
+  .row{display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap}
+  .timer{
+    font-variant-numeric:tabular-nums; font-size:54px; font-weight:700; letter-spacing:1px;
+    text-align:center; padding:10px 0;
+  }
+  .timer.live{color:var(--accent2)}
+  .muted{color:var(--muted)}
+  .center{text-align:center}
+  .tabs{display:flex; gap:8px; margin-bottom:20px}
+  .tabs button{border-radius:999px}
+  .tabs button.active{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
+  table{width:100%; border-collapse:collapse; font-size:14px}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line)}
+  th{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px}
+  tr:last-child td{border-bottom:none}
+  .pill{display:inline-block; padding:3px 9px; border-radius:999px; font-size:12px; font-weight:600}
+  .pill.issue{background:#1e2a4d; color:#9cc0ff}
+  .pill.call{background:#11332f; color:#6ee7d6}
+  .pill.offline{background:#332a14; color:#ffd699}
+  .pill.project{background:#2d1e3d; color:#d8b4fe}
+  .pill.demo{background:#3a1c24; color:#ff9db0}
+  .empty{padding:36px; text-align:center; color:var(--muted)}
+  .login{min-height:70vh; display:flex; align-items:center; justify-content:center}
+  .login .card{max-width:420px; width:100%; text-align:center}
+  .login h1{margin:0 0 6px; font-size:22px}
+  .login p{margin:0 0 22px; color:var(--muted)}
+  .stat{display:flex; gap:18px; flex-wrap:wrap}
+  .stat .box{flex:1; min-width:140px; background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:14px}
+  .stat .box .n{font-size:24px; font-weight:700}
+  .stat .box .l{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px}
+  .hidden{display:none}
+  .small{font-size:13px}
+  .toolbar{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="login">
+  <div class="card">
+    <h1>Support <span style="color:var(--accent)">Time Tracker</span></h1>
+    <p>Enter your name to start tracking your day.</p>
+    <div style="text-align:left">
+      <label for="nameInput">Your name</label>
+      <input id="nameInput" placeholder="e.g. Priya" autocomplete="off" />
+    </div>
+    <button class="primary" style="margin-top:16px; width:100%" onclick="login()">Start tracking</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appView" class="hidden">
+  <header>
+    <div class="brand">Support <span>Time Tracker</span></div>
+    <div class="who">Signed in as <b id="whoName"></b>
+      <button class="ghost small" onclick="logout()">Switch user</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="tabs">
+      <button id="tabTrack" class="active" onclick="showTab('track')">Track</button>
+      <button id="tabHistory" onclick="showTab('history')">My history</button>
+      <button id="tabAdmin" onclick="showTab('admin')">Manager rollup</button>
+    </div>
+
+    <!-- TRACK -->
+    <div id="trackTab">
+      <div class="card">
+        <div class="grid two">
+          <div>
+            <label for="activityType">Activity type</label>
+            <select id="activityType" onchange="updateCustomerLabel()">
+              <option value="issue">Issue</option>
+              <option value="call">Customer call</option>
+              <option value="offline">Offline work</option>
+              <option value="project">Project</option>
+              <option value="demo">Demo / implementation call</option>
+            </select>
+          </div>
+          <div>
+            <label id="customerLabel" for="customer">Customer</label>
+            <input id="customer" placeholder="Which customer is this for?" autocomplete="off" />
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <label for="note">Note (optional)</label>
+          <input id="note" placeholder="What are you working on?" autocomplete="off" />
+        </div>
+
+        <div class="timer" id="timerDisplay">00:00:00</div>
+        <div class="row" style="justify-content:center">
+          <button id="startBtn" class="primary" onclick="startTimer()">▶ Start</button>
+          <button id="stopBtn" class="danger hidden" onclick="stopTimer()">■ Stop &amp; log</button>
+          <button id="cancelBtn" class="ghost hidden" onclick="cancelTimer()">Discard</button>
+        </div>
+        <div id="liveMeta" class="center muted small hidden" style="margin-top:6px"></div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar" style="margin-bottom:0">
+          <b>Log time manually</b>
+          <button class="ghost small" id="manualToggle" onclick="toggleManual()">+ Add entry</button>
+        </div>
+        <div id="manualForm" class="hidden" style="margin-top:16px">
+          <div class="grid two">
+            <div>
+              <label for="mDate">Date</label>
+              <input id="mDate" type="date" />
+            </div>
+            <div>
+              <label for="mType">Activity type</label>
+              <select id="mType">
+                <option value="issue">Issue</option>
+                <option value="call">Customer call</option>
+                <option value="offline">Offline work</option>
+                <option value="project">Project</option>
+                <option value="demo">Demo / implementation call</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid two" style="margin-top:14px">
+            <div>
+              <label for="mAmount">Time spent</label>
+              <div class="row" style="align-items:stretch; gap:8px">
+                <input id="mAmount" type="number" min="0" step="any" placeholder="e.g. 20" style="flex:2" />
+                <select id="mUnit" style="flex:1">
+                  <option value="minutes">Minutes</option>
+                  <option value="hours">Hours</option>
+                </select>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <div class="grid two" style="margin-top:14px">
+            <div>
+              <label for="mCustomer">Customer</label>
+              <input id="mCustomer" placeholder="Which customer?" autocomplete="off" />
+            </div>
+            <div>
+              <label for="mNote">Note (optional)</label>
+              <input id="mNote" placeholder="What was this?" autocomplete="off" />
+            </div>
+          </div>
+          <button class="primary" style="margin-top:16px" onclick="saveManual()">Save entry</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="stat" id="todayStats"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="historyTab" class="hidden">
+      <div class="card">
+        <div class="toolbar">
+          <div><b>My entries</b> <span class="muted small" id="historyCount"></span></div>
+          <button class="ghost small" onclick="exportCSV('mine')">Export CSV</button>
+        </div>
+        <div id="historyTable"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="adminTab" class="hidden">
+      <div class="card">
+        <div class="toolbar">
+          <div><b>All agents</b> <span class="muted small">— totals across everyone on this browser</span></div>
+          <button class="ghost small" onclick="exportCSV('all')">Export CSV</button>
+        </div>
+        <div class="row" style="margin-bottom:16px; align-items:flex-end">
+          <div style="min-width:180px">
+            <label for="adminRange">Date range</label>
+            <select id="adminRange" onchange="onRangeChange()">
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="week">This week</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div id="customRange" class="hidden row" style="align-items:flex-end">
+            <div><label for="adminFrom">From</label><input id="adminFrom" type="date" onchange="renderAdmin()" /></div>
+            <div><label for="adminTo">To</label><input id="adminTo" type="date" onchange="renderAdmin()" /></div>
+          </div>
+        </div>
+        <div class="stat" id="adminStats" style="margin-bottom:18px"></div>
+        <h4 class="muted" style="margin:18px 0 8px; text-transform:uppercase; letter-spacing:.5px; font-size:12px">By agent</h4>
+        <div id="byAgent"></div>
+        <h4 class="muted" style="margin:24px 0 8px; text-transform:uppercase; letter-spacing:.5px; font-size:12px">By customer</h4>
+        <div id="byCustomer"></div>
+        <h4 class="muted" style="margin:24px 0 8px; text-transform:uppercase; letter-spacing:.5px; font-size:12px">By activity type</h4>
+        <div id="byType"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Data layer (swap this block for a backend later) ---------- */
+const STORE_KEY = 'stt_entries_v1';
+const SHIFT_HOURS = 10;          // total shift length
+const BREAK_HOURS = 1;           // break within the shift
+const TARGET_SECONDS = (SHIFT_HOURS - BREAK_HOURS) * 3600;  // expected logged time/day
+const TYPES = {
+  issue:   {label:'Issue',                       cls:'issue'},
+  call:    {label:'Customer call',               cls:'call'},
+  offline: {label:'Offline work',                cls:'offline'},
+  project: {label:'Project',                      cls:'project'},
+  demo:    {label:'Demo / implementation call',  cls:'demo'},
+};
+function loadEntries(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ return []; } }
+function saveEntries(list){ localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
+function addEntry(entry){ const l = loadEntries(); l.push(entry); saveEntries(l); }
+
+/* ---------- Session ---------- */
+let currentUser = localStorage.getItem('stt_user') || null;
+let timer = null;        // interval id
+let startTs = null;      // ms
+
+/* ---------- Auth ---------- */
+function login(){
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name){ document.getElementById('nameInput').focus(); return; }
+  currentUser = name;
+  localStorage.setItem('stt_user', name);
+  renderApp();
+}
+function logout(){
+  if(timer){ if(!confirm('A timer is running. Switch user and discard it?')) return; cancelTimer(); }
+  currentUser = null;
+  localStorage.removeItem('stt_user');
+  document.getElementById('appView').classList.add('hidden');
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('nameInput').value='';
+}
+function renderApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+  document.getElementById('whoName').textContent = currentUser;
+  showTab('track');
+}
+
+/* ---------- Timer ---------- */
+function startTimer(){
+  const customer = document.getElementById('customer').value.trim();
+  const type = document.getElementById('activityType').value;
+  if(!customer){
+    alert('Please enter the customer this activity is for.');
+    document.getElementById('customer').focus();
+    return;
+  }
+  startTs = Date.now();
+  document.getElementById('startBtn').classList.add('hidden');
+  document.getElementById('stopBtn').classList.remove('hidden');
+  document.getElementById('cancelBtn').classList.remove('hidden');
+  document.getElementById('timerDisplay').classList.add('live');
+  lockInputs(true);
+  const meta = document.getElementById('liveMeta');
+  meta.classList.remove('hidden');
+  meta.textContent = `${TYPES[type].label} • ${customer}`;
+  tick();
+  timer = setInterval(tick, 1000);
+}
+function tick(){
+  const el = Date.now() - startTs;
+  document.getElementById('timerDisplay').textContent = fmt(el);
+}
+function stopTimer(){
+  const elapsed = Date.now() - startTs;
+  const entry = {
+    id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
+    user: currentUser,
+    type: document.getElementById('activityType').value,
+    customer: document.getElementById('customer').value.trim(),
+    note: document.getElementById('note').value.trim(),
+    start: startTs,
+    end: Date.now(),
+    seconds: Math.round(elapsed/1000),
+  };
+  addEntry(entry);
+  resetTimer();
+  renderToday();
+}
+function cancelTimer(){ resetTimer(); }
+function resetTimer(){
+  if(timer){ clearInterval(timer); timer=null; }
+  startTs = null;
+  document.getElementById('timerDisplay').textContent = '00:00:00';
+  document.getElementById('timerDisplay').classList.remove('live');
+  document.getElementById('startBtn').classList.remove('hidden');
+  document.getElementById('stopBtn').classList.add('hidden');
+  document.getElementById('cancelBtn').classList.add('hidden');
+  document.getElementById('liveMeta').classList.add('hidden');
+  document.getElementById('customer').value='';
+  document.getElementById('note').value='';
+  lockInputs(false);
+}
+function lockInputs(on){
+  ['activityType','customer','note'].forEach(id=>document.getElementById(id).disabled = on);
+}
+/* ---------- Manual entry ---------- */
+function toggleManual(){
+  const f = document.getElementById('manualForm');
+  const open = f.classList.toggle('hidden') === false;
+  document.getElementById('manualToggle').textContent = open ? '− Hide' : '+ Add entry';
+  if(open && !document.getElementById('mDate').value){
+    document.getElementById('mDate').value = dayKey(Date.now());
+  }
+}
+function saveManual(){
+  const date = document.getElementById('mDate').value;
+  const amount = parseFloat(document.getElementById('mAmount').value);
+  const unit = document.getElementById('mUnit').value;
+  const customer = document.getElementById('mCustomer').value.trim();
+  if(!date){ alert('Please pick a date.'); return; }
+  if(!amount || amount <= 0){ alert('Please enter how much time you spent.'); return; }
+  if(!customer){ alert('Please enter the customer this activity is for.'); return; }
+  // anchor the entry at noon on the chosen day; end = start + duration
+  const startTs = new Date(`${date}T12:00`).getTime();
+  const seconds = Math.round(amount * (unit==='hours' ? 3600 : 60));
+  addEntry({
+    id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
+    user: currentUser,
+    type: document.getElementById('mType').value,
+    customer,
+    note: document.getElementById('mNote').value.trim(),
+    start: startTs, end: startTs + seconds*1000,
+    seconds,
+    manual: true,
+  });
+  ['mAmount','mCustomer','mNote'].forEach(id=>document.getElementById(id).value='');
+  renderToday();
+  alert('Entry saved.');
+}
+function updateCustomerLabel(){
+  const t = document.getElementById('activityType').value;
+  const lbl = (t==='offline'||t==='project') ? 'Customer (or "Internal")' : 'Customer';
+  document.getElementById('customerLabel').textContent = lbl;
+}
+
+/* ---------- Formatting ---------- */
+function fmt(ms){
+  const s = Math.floor(ms/1000);
+  const h = String(Math.floor(s/3600)).padStart(2,'0');
+  const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const sec = String(s%60).padStart(2,'0');
+  return `${h}:${m}:${sec}`;
+}
+function fmtDur(seconds){
+  const h = Math.floor(seconds/3600);
+  const m = Math.floor((seconds%3600)/60);
+  if(h>0) return `${h}h ${m}m`;
+  if(m>0) return `${m}m`;
+  return `${seconds}s`;
+}
+function isToday(ts){
+  const d = new Date(ts), n = new Date();
+  return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
+}
+function fmtTime(ts){ return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString([], {month:'short', day:'numeric'}); }
+function dayKey(ts){ const d=new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dayLabel(ts){ return new Date(ts).toLocaleDateString([], {weekday:'short', month:'short', day:'numeric', year:'numeric'}); }
+function fmtHM(seconds){ const h=Math.floor(seconds/3600); const m=Math.round((seconds%3600)/60); return `${h}h ${String(m).padStart(2,'0')}m`; }
+
+/* ---------- Tabs ---------- */
+function showTab(tab){
+  ['track','history','admin'].forEach(t=>{
+    document.getElementById(t+'Tab').classList.toggle('hidden', t!==tab);
+    document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===tab);
+  });
+  if(tab==='track') renderToday();
+  if(tab==='history') renderHistory();
+  if(tab==='admin') renderAdmin();
+}
+
+/* ---------- Today stats ---------- */
+function renderToday(){
+  const mine = loadEntries().filter(e=>e.user===currentUser && isToday(e.start));
+  const total = mine.reduce((a,e)=>a+e.seconds,0);
+  const byType = {};
+  mine.forEach(e=>byType[e.type]=(byType[e.type]||0)+e.seconds);
+  let html = `<div class="box"><div class="n">${fmtDur(total)}</div><div class="l">Tracked today</div></div>`;
+  html += `<div class="box"><div class="n">${mine.length}</div><div class="l">Entries today</div></div>`;
+  const topType = Object.entries(byType).sort((a,b)=>b[1]-a[1])[0];
+  html += `<div class="box"><div class="n">${topType?TYPES[topType[0]].label:'—'}</div><div class="l">Top activity</div></div>`;
+  document.getElementById('todayStats').innerHTML = html;
+}
+
+/* ---------- History ---------- */
+function renderHistory(){
+  const mine = loadEntries().filter(e=>e.user===currentUser).sort((a,b)=>b.start-a.start);
+  document.getElementById('historyCount').textContent = `(${mine.length})`;
+  if(mine.length===0){ document.getElementById('historyTable').innerHTML = '<div class="empty">No entries yet. Start a timer to log your first one.</div>'; return; }
+
+  // group by day
+  const days = {};
+  mine.forEach(e=>{ const k=dayKey(e.start); (days[k]=days[k]||[]).push(e); });
+  const orderedKeys = Object.keys(days).sort((a,b)=>b.localeCompare(a)); // newest first
+
+  let out = '';
+  orderedKeys.forEach(k=>{
+    const list = days[k];
+    const dayTotal = list.reduce((a,e)=>a+e.seconds,0);
+    const pct = Math.min(100, Math.round(dayTotal/TARGET_SECONDS*100));
+    const met = dayTotal >= TARGET_SECONDS;
+    const remaining = TARGET_SECONDS - dayTotal;
+    const statusCol = met ? 'var(--ok)' : (pct>=70 ? 'var(--warn)' : 'var(--muted)');
+    const statusText = met
+      ? `Target met (+${fmtHM(dayTotal-TARGET_SECONDS)})`
+      : `${fmtHM(remaining)} short of ${SHIFT_HOURS-BREAK_HOURS}h`;
+    const rows = list.map(e=>`
+      <tr>
+        <td>${e.manual ? '<span class="muted">Manual</span>' : fmtTime(e.start)+'–'+fmtTime(e.end)}</td>
+        <td><span class="pill ${TYPES[e.type].cls}">${TYPES[e.type].label}</span></td>
+        <td>${esc(e.customer)}</td>
+        <td>${esc(e.note)||'<span class="muted">—</span>'}</td>
+        <td><b>${fmtDur(e.seconds)}</b></td>
+        <td><button class="ghost small" onclick="delEntry('${e.id}')">✕</button></td>
+      </tr>`).join('');
+    out += `
+      <div class="card" style="background:var(--panel2); margin-bottom:14px; padding:16px">
+        <div class="toolbar" style="margin-bottom:10px">
+          <div><b>${dayLabel(list[0].start)}</b> <span class="muted small">· ${list.length} ${list.length===1?'entry':'entries'}</span></div>
+          <div style="text-align:right">
+            <div style="font-size:20px; font-weight:700">${fmtHM(dayTotal)} <span class="muted small">/ ${SHIFT_HOURS-BREAK_HOURS}h</span></div>
+            <div class="small" style="color:${statusCol}">${statusText}</div>
+          </div>
+        </div>
+        <div style="height:6px; background:var(--line); border-radius:999px; overflow:hidden; margin-bottom:12px">
+          <div style="height:100%; width:${pct}%; background:${statusCol}"></div>
+        </div>
+        <table>
+          <thead><tr><th>Time</th><th>Type</th><th>Customer</th><th>Note</th><th>Duration</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  });
+  document.getElementById('historyTable').innerHTML = out;
+}
+function delEntry(id){
+  if(!confirm('Delete this entry?')) return;
+  saveEntries(loadEntries().filter(e=>e.id!==id));
+  renderHistory();
+}
+
+/* ---------- Admin rollup ---------- */
+function onRangeChange(){
+  const r = document.getElementById('adminRange').value;
+  document.getElementById('customRange').classList.toggle('hidden', r!=='custom');
+  renderAdmin();
+}
+function startOfWeek(d){ // Monday-based
+  const x = new Date(d); const day = (x.getDay()+6)%7;
+  x.setHours(0,0,0,0); x.setDate(x.getDate()-day); return x.getTime();
+}
+function rangeFilter(entries){
+  const r = document.getElementById('adminRange') ? document.getElementById('adminRange').value : 'all';
+  if(r==='all') return entries;
+  const now = new Date();
+  if(r==='today') return entries.filter(e=>isToday(e.start));
+  if(r==='week'){ const s=startOfWeek(now); return entries.filter(e=>e.start>=s); }
+  if(r==='custom'){
+    const f = document.getElementById('adminFrom').value;
+    const t = document.getElementById('adminTo').value;
+    const fs = f ? new Date(f+'T00:00').getTime() : -Infinity;
+    const ts = t ? new Date(t+'T23:59:59').getTime() : Infinity;
+    return entries.filter(e=>e.start>=fs && e.start<=ts);
+  }
+  return entries;
+}
+function renderAdmin(){
+  const all = rangeFilter(loadEntries());
+  const total = all.reduce((a,e)=>a+e.seconds,0);
+  const agents = new Set(all.map(e=>e.user));
+  const customers = new Set(all.map(e=>e.customer));
+  document.getElementById('adminStats').innerHTML = `
+    <div class="box"><div class="n">${fmtDur(total)}</div><div class="l">Total tracked</div></div>
+    <div class="box"><div class="n">${all.length}</div><div class="l">Entries</div></div>
+    <div class="box"><div class="n">${agents.size}</div><div class="l">Agents</div></div>
+    <div class="box"><div class="n">${customers.size}</div><div class="l">Customers</div></div>`;
+
+  document.getElementById('byAgent').innerHTML   = rollupTable(all, 'user',     'Agent');
+  document.getElementById('byCustomer').innerHTML= rollupTable(all, 'customer', 'Customer');
+  document.getElementById('byType').innerHTML    = rollupTable(all, 'type',     'Activity', true);
+}
+function rollupTable(all, key, header, isType){
+  if(all.length===0) return '<div class="empty">No data yet.</div>';
+  const map = {};
+  all.forEach(e=>{
+    const k = e[key];
+    if(!map[k]) map[k]={seconds:0,count:0};
+    map[k].seconds += e.seconds; map[k].count++;
+  });
+  const rows = Object.entries(map).sort((a,b)=>b[1].seconds-a[1].seconds).map(([k,v])=>{
+    const display = isType ? `<span class="pill ${TYPES[k].cls}">${TYPES[k].label}</span>` : esc(k);
+    return `<tr><td>${display}</td><td>${v.count}</td><td><b>${fmtDur(v.seconds)}</b></td></tr>`;
+  }).join('');
+  return `<table><thead><tr><th>${header}</th><th>Entries</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ---------- Export ---------- */
+function exportCSV(scope){
+  let data = loadEntries();
+  if(scope==='mine') data = data.filter(e=>e.user===currentUser);
+  if(data.length===0){ alert('Nothing to export yet.'); return; }
+  const head = ['Agent','Date','Start','End','Type','Customer','Note','Seconds','Duration'];
+  const lines = [head.join(',')];
+  data.sort((a,b)=>b.start-a.start).forEach(e=>{
+    lines.push([
+      e.user, fmtDate(e.start), fmtTime(e.start), fmtTime(e.end),
+      TYPES[e.type].label, e.customer, e.note, e.seconds, fmtDur(e.seconds)
+    ].map(csvCell).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `time-tracker-${scope}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+function csvCell(v){ v = String(v??''); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function esc(s){ return String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- Boot ---------- */
+document.getElementById('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') login(); });
+document.getElementById('customer').addEventListener('keydown', e=>{ if(e.key==='Enter' && !timer) startTimer(); });
+if(currentUser) renderApp();
+</script>
+</body>
+</html>
