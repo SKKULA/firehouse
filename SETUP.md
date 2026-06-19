@@ -3,7 +3,7 @@
 A time-tracker for the support team. Google sign-in (kula.ai only), shared data, and a
 Manager rollup visible only to the admin.
 
-Live page: https://skkula.github.io/support-time-tracker/
+Live page: https://skkula.github.io/firehouse/
 
 ## What you need to do once (≈15 min)
 
@@ -63,7 +63,7 @@ To add more admins later, edit the email list inside `is_admin()`.
 3. Copy the **Client ID** and **Client secret**.
 4. In Supabase: **Authentication → Providers → Google** → enable, paste the Client ID + secret, save.
 5. In Supabase: **Authentication → URL Configuration** → set **Site URL** to
-   `https://skkula.github.io/support-time-tracker/` and add it under **Redirect URLs** too.
+   `https://skkula.github.io/firehouse/` and add it under **Redirect URLs** too.
 
 > The app already passes `hd=kula.ai` and also re-checks the email domain after login, so only
 > kula.ai accounts get in. For an extra lock, restrict the OAuth consent screen to Internal
