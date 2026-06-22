@@ -1,57 +1,70 @@
-// Firehouse launcher — clicking the pinned toolbar icon opens the app
-// in a focused popup window (reused if already open).
+// Firehouse extension — handles Google sign-in via chrome.identity so it works
+// from the toolbar popup (which would otherwise close mid-OAuth). The resulting
+// session is written to chrome.storage and read back by the popup.
 
-const APP_URL = "https://skkula.github.io/firehouse/";
-const WIN_W = 400;
-const WIN_H = 660;
-const MARGIN = 16;
+importScripts("lib/supabase.js");
 
-let firehouseWindowId = null;
+const SUPABASE_URL = "https://vicfnkbsrcmemhffuqyq.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable__ouGswb_yT67VCufAJY-Zg_KVw5b_tv";
 
-// Figure out the top-right corner of the active display.
-async function topRightPosition() {
-  let screenW = 1440, screenLeft = 0, screenTop = 0; // sensible fallback
-  try {
-    const displays = await chrome.system.display.getInfo();
-    const primary = displays.find(d => d.isPrimary) || displays[0];
-    if (primary) {
-      screenW = primary.workArea.width;
-      screenLeft = primary.workArea.left;
-      screenTop = primary.workArea.top;
-    }
-  } catch (e) { /* permission missing or unavailable — use fallback */ }
-  return {
-    left: Math.max(0, screenLeft + screenW - WIN_W - MARGIN),
-    top: screenTop + MARGIN
-  };
-}
+// chrome.storage-backed storage so the popup and worker share one session.
+const chromeStorageAdapter = {
+  getItem: (key) => chrome.storage.local.get(key).then((r) => r[key] ?? null),
+  setItem: (key, value) => chrome.storage.local.set({ [key]: value }),
+  removeItem: (key) => chrome.storage.local.remove(key),
+};
 
-chrome.action.onClicked.addListener(async () => {
-  // If our window is still open, just focus it.
-  if (firehouseWindowId !== null) {
-    try {
-      await chrome.windows.get(firehouseWindowId);
-      await chrome.windows.update(firehouseWindowId, { focused: true });
-      return;
-    } catch (e) {
-      firehouseWindowId = null; // window was closed
-    }
-  }
-
-  const { left, top } = await topRightPosition();
-  const win = await chrome.windows.create({
-    url: APP_URL,
-    type: "popup",
-    width: WIN_W,
-    height: WIN_H,
-    left,
-    top,
-    focused: true
-  });
-  firehouseWindowId = win.id;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: chromeStorageAdapter,
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+    flowType: "pkce",
+  },
 });
 
-// Forget the window once it's closed so the next click opens a fresh one.
-chrome.windows.onRemoved.addListener((closedId) => {
-  if (closedId === firehouseWindowId) firehouseWindowId = null;
+async function doSignIn() {
+  const redirectTo = chrome.identity.getRedirectURL(); // https://<id>.chromiumapp.org/
+  const { data, error } = await sb.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      skipBrowserRedirect: true,
+      redirectTo,
+      queryParams: { hd: "kula.ai", prompt: "select_account" },
+    },
+  });
+  if (error) throw error;
+
+  const redirectUrl = await chrome.identity.launchWebAuthFlow({
+    url: data.url,
+    interactive: true,
+  });
+  const u = new URL(redirectUrl);
+  const code = u.searchParams.get("code");
+  if (!code) {
+    throw new Error(u.searchParams.get("error_description") || "Sign-in was cancelled.");
+  }
+  const { error: exErr } = await sb.auth.exchangeCodeForSession(code);
+  if (exErr) throw exErr;
+  return true;
+}
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg && msg.type === "signin") {
+    doSignIn()
+      .then(() => sendResponse({ ok: true }))
+      .catch((err) => sendResponse({ ok: false, error: String(err && err.message || err) }));
+    return true; // async response
+  }
+  if (msg && msg.type === "signout") {
+    sb.auth.signOut()
+      .then(() => sendResponse({ ok: true }))
+      .catch((err) => sendResponse({ ok: false, error: String(err) }));
+    return true;
+  }
+  if (msg && msg.type === "redirectUrl") {
+    sendResponse({ url: chrome.identity.getRedirectURL() });
+    return false;
+  }
 });

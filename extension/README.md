@@ -1,26 +1,51 @@
-# Firehouse — Chrome extension (launcher)
+# Firehouse — Chrome extension (dropdown popup)
 
-Pin this and click it to open Firehouse in a focused popup window. It reuses the hosted app
-(https://skkula.github.io/firehouse/) and its Google login — nothing to configure.
+Pin it and click the flame to get the full tracker as a **dropdown panel** hanging off the
+toolbar icon — no separate window, no tab. Same Supabase data as the website.
 
-## Install (load unpacked)
+## One-time setup
+
+### 1. Load the extension
 1. Open Chrome → `chrome://extensions`.
 2. Toggle **Developer mode** on (top-right).
 3. Click **Load unpacked** and select this `extension/` folder.
-4. Click the puzzle-piece icon in the toolbar → **pin** Firehouse so the flame icon stays visible.
+4. Click the puzzle-piece icon → **pin** Firehouse so the flame stays in the toolbar.
+5. On the Firehouse card, note the **ID** (a long string like `abcd…`). You'll need it next.
+
+### 2. Allow the extension's login redirect in Supabase
+Google sign-in in an extension returns to a special URL. Add it to Supabase once:
+
+1. Your extension's redirect URL is:
+   ```
+   https://<EXTENSION_ID>.chromiumapp.org/
+   ```
+   Replace `<EXTENSION_ID>` with the ID from step 1.5. (Tip: in the popup's devtools console you
+   can run `chrome.identity.getRedirectURL()` to get the exact value.)
+2. In Supabase → **Authentication → URL Configuration → Redirect URLs** → **Add URL** → paste
+   that `https://<EXTENSION_ID>.chromiumapp.org/` value → **Save**.
+
+That's the only extra setting. Google Cloud needs no changes — login still goes through
+Supabase's existing Google provider.
 
 ## Use
-- Click the pinned flame icon → Firehouse opens in a compact window **snapped to the
-  top-right corner** of your screen (400×660).
-- Click it again while open → it just focuses the existing window (no duplicates).
-- Close the window when done; the next click opens a fresh one.
+- Click the pinned flame → the tracker drops down right under the icon.
+- First time: click **Sign in with Google**. A Google window opens; finish signing in, then
+  click the flame again — you'll be logged in (the popup closes during Google's flow, which is
+  normal for extensions).
+- After that, clicking the flame opens you straight into the tracker.
 
-## Sharing with the team
-Anyone can install it the same way (Load unpacked). To distribute without Developer mode,
-the folder can be published to the Chrome Web Store (one-time $5 developer registration) — ask
-if you want that set up.
+## How it works
+- The app UI lives in `popup.html` / `popup.js`; styling in `popup.css`.
+- `lib/supabase.js` is the Supabase client bundled locally (extension pages can't load remote
+  scripts).
+- `background.js` runs Google sign-in via `chrome.identity` and stores the session in
+  `chrome.storage`, so it survives the popup closing. The popup reads that session on open.
+- Data, access rules, and the admin-only rollup are identical to the website — it's the same
+  Supabase backend.
 
 ## Notes
-- This is a *launcher*: the app itself still runs from the hosted URL, so any update you push to
-  the site is picked up automatically — the extension never needs re-publishing for app changes.
-- Login and data are identical to the website; signing in once in the popup keeps you signed in.
+- Unlike the website, this popup is fully self-contained, so **app changes must be re-loaded**
+  here (push to git isn't enough): edit files, then hit the **↻ reload** on the extension card.
+- To distribute without Developer mode, publish to the Chrome Web Store (one-time $5 dev
+  registration) — ask if you want that set up. Note the extension ID changes when published, so
+  you'd add that new redirect URL to Supabase too.

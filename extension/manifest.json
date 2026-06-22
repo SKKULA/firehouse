@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Firehouse",
-  "version": "1.0.0",
-  "description": "Quick-launch the Firehouse support time tracker in a focused window.",
+  "version": "2.0.0",
+  "description": "Track your support time from a quick dropdown in your toolbar.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -10,7 +10,8 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "Open Firehouse",
+    "default_title": "Firehouse",
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -18,7 +19,8 @@
       "128": "icons/icon128.png"
     }
   },
-  "permissions": ["system.display"],
+  "permissions": ["identity", "storage"],
+  "host_permissions": ["https://vicfnkbsrcmemhffuqyq.supabase.co/*"],
   "background": {
     "service_worker": "background.js"
   }
