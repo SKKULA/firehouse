@@ -18,10 +18,15 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: chromeStorageAdapter,
     persistSession: true,
-    autoRefreshToken: true,
+    // The service worker sleeps when idle, so a recurring refresh timer just
+    // throws "No SW". The popup (a normal page) refreshes the session instead.
+    autoRefreshToken: false,
     detectSessionInUrl: false,
     flowType: "pkce",
   },
+  // Realtime isn't used and its Worker/WebSocket setup isn't available in a
+  // service worker — keep it from initializing.
+  realtime: { params: {} },
 });
 
 async function doSignIn() {
