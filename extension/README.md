@@ -10,7 +10,8 @@ Pin this and click it to open Firehouse in a focused popup window. It reuses the
 4. Click the puzzle-piece icon in the toolbar → **pin** Firehouse so the flame icon stays visible.
 
 ## Use
-- Click the pinned flame icon → Firehouse opens in a compact 440×720 window.
+- Click the pinned flame icon → Firehouse opens in a compact window **snapped to the
+  top-right corner** of your screen (400×660).
 - Click it again while open → it just focuses the existing window (no duplicates).
 - Close the window when done; the next click opens a fresh one.
 

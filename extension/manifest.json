@@ -18,6 +18,7 @@
       "128": "icons/icon128.png"
     }
   },
+  "permissions": ["system.display"],
   "background": {
     "service_worker": "background.js"
   }
