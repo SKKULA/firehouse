@@ -104,6 +104,8 @@
   .bar-fill{height:100%; background:linear-gradient(90deg,var(--ember),var(--ember2)); border-radius:999px}
   .sec-title{margin:22px 0 10px; text-transform:uppercase; letter-spacing:.6px; font-size:12px; color:var(--muted); font-weight:700; display:flex; align-items:center; gap:8px}
   .sec-title::before{content:''; width:14px; height:2px; background:var(--ember); border-radius:2px}
+  .sec-title.collapsible{cursor:pointer; user-select:none}
+  .sec-title .caret{display:inline-block; width:12px; font-size:10px; color:var(--ember)}
   @media (max-width:640px){
     .grid.two{grid-template-columns:1fr}
     .wrap{padding:18px 14px 80px}
@@ -270,13 +272,19 @@
           <button class="ghost small" onclick="exportCSV('all')">Export CSV</button>
         </div>
         <div class="row" style="margin-bottom:16px; align-items:flex-end">
-          <div style="min-width:180px">
+          <div style="min-width:160px">
             <label for="adminRange">Date range</label>
             <select id="adminRange" onchange="onRangeChange()">
               <option value="all">All time</option>
               <option value="today">Today</option>
               <option value="week">This week</option>
               <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div style="min-width:180px">
+            <label for="adminAgent">Agent</label>
+            <select id="adminAgent" onchange="renderAdmin()">
+              <option value="all">All agents</option>
             </select>
           </div>
           <div id="customRange" class="hidden row" style="align-items:flex-end">
@@ -287,9 +295,9 @@
         <div class="stat" id="adminStats" style="margin-bottom:18px"></div>
         <div class="sec-title">By agent</div>
         <div id="byAgent"></div>
-        <div class="sec-title">By customer</div>
+        <div class="sec-title collapsible" onclick="toggleSection('byCustomer', this)"><span class="caret">▾</span> By customer</div>
         <div id="byCustomer"></div>
-        <div class="sec-title">By activity type</div>
+        <div class="sec-title collapsible" onclick="toggleSection('byType', this)"><span class="caret">▾</span> By activity type</div>
         <div id="byType"></div>
       </div>
     </div>
@@ -570,9 +578,25 @@ function rangeFilter(entries){
   }
   return entries;
 }
+function toggleSection(id, el){
+  const d = document.getElementById(id);
+  const hidden = d.classList.toggle('hidden');
+  const c = el.querySelector('.caret'); if(c) c.textContent = hidden ? '▸' : '▾';
+}
+function populateAgentFilter(){
+  const sel = document.getElementById('adminAgent');
+  if(!sel) return;
+  const cur = sel.value;
+  const names = [...new Set(loadEntries().map(e=>e.name||e.user))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML = '<option value="all">All agents</option>' + names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+}
 function renderAdmin(){
   if(!isAdmin) return;
-  const all = rangeFilter(loadEntries());
+  populateAgentFilter();
+  let all = rangeFilter(loadEntries());
+  const agent = document.getElementById('adminAgent') ? document.getElementById('adminAgent').value : 'all';
+  if(agent!=='all') all = all.filter(e=>(e.name||e.user)===agent);
   const total=all.reduce((a,e)=>a+e.seconds,0);
   const agents=new Set(all.map(e=>e.name||e.user)), customers=new Set(all.map(e=>e.customer));
   document.getElementById('adminStats').innerHTML=
@@ -603,7 +627,11 @@ function rollupTable(all, key, header, isType){
 function exportCSV(scope){
   let data = loadEntries();
   if(scope==='mine') data=data.filter(e=>e.user===currentUser);
-  if(scope==='all') data=rangeFilter(data);
+  if(scope==='all'){
+    data=rangeFilter(data);
+    const agent = document.getElementById('adminAgent') ? document.getElementById('adminAgent').value : 'all';
+    if(agent!=='all') data = data.filter(e=>(e.name||e.user)===agent);
+  }
   if(data.length===0){ alert('Nothing to export yet.'); return; }
   const head=['Agent','Email','Date','Type','Customer','Note','Seconds','Duration'];
   const lines=[head.join(',')];

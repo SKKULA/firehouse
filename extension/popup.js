@@ -234,9 +234,19 @@ function rangeFilter(entries){
   }
   return entries;
 }
+function populateAgentFilter(){
+  const sel = $('adminAgent'); if(!sel) return;
+  const cur = sel.value;
+  const names = [...new Set(loadEntries().map(e=>e.name||e.user))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML = '<option value="all">All agents</option>' + names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+}
 function renderAdmin(){
   if(!isAdmin) return;
-  const all = rangeFilter(loadEntries());
+  populateAgentFilter();
+  let all = rangeFilter(loadEntries());
+  const agent = $('adminAgent') ? $('adminAgent').value : 'all';
+  if(agent!=='all') all = all.filter(e=>(e.name||e.user)===agent);
   const total=all.reduce((a,e)=>a+e.seconds,0);
   const agents=new Set(all.map(e=>e.name||e.user)), customers=new Set(all.map(e=>e.customer));
   $('adminStats').innerHTML=
@@ -267,7 +277,11 @@ function rollupTable(all, key, header, isType){
 function exportCSV(scope){
   let data = loadEntries();
   if(scope==='mine') data=data.filter(e=>e.user===currentUser);
-  if(scope==='all') data=rangeFilter(data);
+  if(scope==='all'){
+    data=rangeFilter(data);
+    const agent = $('adminAgent') ? $('adminAgent').value : 'all';
+    if(agent!=='all') data = data.filter(e=>(e.name||e.user)===agent);
+  }
   if(data.length===0){ alert('Nothing to export yet.'); return; }
   const head=['Agent','Email','Date','Type','Customer','Note','Seconds','Duration'];
   const lines=[head.join(',')];
@@ -294,8 +308,13 @@ $('saveManualBtn').addEventListener('click', saveManual);
 $('exportMine').addEventListener('click', ()=>exportCSV('mine'));
 $('exportAll').addEventListener('click', ()=>exportCSV('all'));
 $('adminRange').addEventListener('change', onRangeChange);
+$('adminAgent').addEventListener('change', renderAdmin);
 $('adminFrom').addEventListener('change', renderAdmin);
 $('adminTo').addEventListener('change', renderAdmin);
+document.querySelectorAll('.sec-title.collapsible').forEach(el=>el.addEventListener('click', ()=>{
+  const d = $(el.dataset.target); const hidden = d.classList.toggle('hidden');
+  const c = el.querySelector('.caret'); if(c) c.textContent = hidden ? '▸' : '▾';
+}));
 $('customer').addEventListener('keydown', e=>{ if(e.key==='Enter' && !timer) startTimer(); });
 $('historyTable').addEventListener('click', e=>{ const b=e.target.closest('[data-del]'); if(b) delEntry(b.dataset.del); });
 

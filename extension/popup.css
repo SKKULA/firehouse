@@ -90,4 +90,6 @@ tr:last-child td{border-bottom:none}
 .bar-fill{height:100%; background:linear-gradient(90deg,var(--ember),var(--ember2)); border-radius:999px}
 .sec-title{margin:16px 0 8px; text-transform:uppercase; letter-spacing:.5px; font-size:11px; color:var(--muted); font-weight:700; display:flex; align-items:center; gap:7px}
 .sec-title::before{content:''; width:12px; height:2px; background:var(--ember); border-radius:2px}
+.sec-title.collapsible{cursor:pointer; user-select:none}
+.sec-title .caret{display:inline-block; width:11px; font-size:9px; color:var(--ember)}
 .hint{font-size:12px; color:var(--muted); margin-top:14px; line-height:1.5}

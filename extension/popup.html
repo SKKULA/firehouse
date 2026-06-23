@@ -167,13 +167,17 @@
             <div style="flex:1"><label for="adminFrom">From</label><input id="adminFrom" type="date" /></div>
             <div style="flex:1"><label for="adminTo">To</label><input id="adminTo" type="date" /></div>
           </div>
+          <div style="margin-top:10px">
+            <label for="adminAgent">Agent</label>
+            <select id="adminAgent"><option value="all">All agents</option></select>
+          </div>
         </div>
         <div class="stat" id="adminStats" style="margin-bottom:16px"></div>
         <div class="sec-title">By agent</div>
         <div id="byAgent"></div>
-        <div class="sec-title">By customer</div>
+        <div class="sec-title collapsible" data-target="byCustomer"><span class="caret">▾</span> By customer</div>
         <div id="byCustomer"></div>
-        <div class="sec-title">By activity type</div>
+        <div class="sec-title collapsible" data-target="byType"><span class="caret">▾</span> By activity type</div>
         <div id="byType"></div>
       </div>
     </div>
