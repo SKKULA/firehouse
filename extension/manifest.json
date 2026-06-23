@@ -3,6 +3,7 @@
   "name": "Firehouse",
   "version": "2.0.0",
   "description": "Track your support time from a quick dropdown in your toolbar.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5OTf5D4bNwsmbjXzTfXbAXovMLgJnA+6UK4Zp372MiwLKkQaKkytGNW0MtOxO1zPMok5ZG9sN49yephYUmjEVyhgrIfb6ZZu5Qx4y+jP2mSjv61lZj/LQn3GPO/8fMGjrzEdRo8ls1D2i2cxf2ZtdTSdhSf7clhbEG8tfQcwO1slxmMxWnY9IlMaK+kFkHoG4Jf0Sy2Tma5ThwCvgE36a8dMcuvaEaGjNuD9kLkpEpEYU7sP6Qfb6L3idQv3IsHijk7Up1qIakd21Z75KgSb7ZLZ/vuEZ+8lK2KRaUq357K79MSSNnRqurEWVbp7Rb6VzwsDsdMrmE2tKlxyEyGJvQIDAQAB",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",

@@ -43,9 +43,26 @@ Supabase's existing Google provider.
 - Data, access rules, and the admin-only rollup are identical to the website — it's the same
   Supabase backend.
 
+## Sharing with a teammate
+The manifest pins a fixed extension ID, so everyone who loads this folder gets the **same** ID
+(`hpamfknefnmpjjafpeoacdkkpoofomkb`) and the same login redirect — no per-person Supabase setup.
+
+Send your teammate the `extension` folder (e.g. a Drive zip). They:
+1. Download and **unzip** it to a stable location (e.g. `~/firehouse-extension`). Keep the folder
+   around — deleting it removes the extension.
+2. Open `chrome://extensions` → turn on **Developer mode** (top-right).
+3. Click **Load unpacked** → select the unzipped `extension` folder.
+4. Pin the flame (puzzle-piece icon → pin).
+5. Click it → **Sign in with Google** with their **@kula.ai** account.
+
+The Supabase redirect URL `https://hpamfknefnmpjjafpeoacdkkpoofomkb.chromiumapp.org/` is already
+allow-listed, so their login works immediately — they only see their own time; the rollup stays
+admin-only.
+
 ## Notes
 - Unlike the website, this popup is fully self-contained, so **app changes must be re-loaded**
   here (push to git isn't enough): edit files, then hit the **↻ reload** on the extension card.
+  Teammates re-download the folder and reload to get updates.
 - To distribute without Developer mode, publish to the Chrome Web Store (one-time $5 dev
-  registration) — ask if you want that set up. Note the extension ID changes when published, so
-  you'd add that new redirect URL to Supabase too.
+  registration) — ask if you want that set up. The Web Store assigns its own ID, so you'd add
+  that new redirect URL to Supabase too.
