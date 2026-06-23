@@ -17,6 +17,7 @@ const TYPES = {
   intoffline:{label:'Internal offline work with engineering',cls:'intoffline'},
   followup:{label:'Ticket follow up',cls:'followup'},
   linear:{label:'Linear clean up',cls:'linear'},
+  oncall:{label:'On call sync',cls:'oncall'},
 };
 
 // chrome.storage-backed adapter — must match background.js so they share one session.

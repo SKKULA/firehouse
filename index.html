@@ -80,6 +80,7 @@
   .pill.intoffline{background:#2a2233; color:#c9b6e6}
   .pill.followup{background:#13322a; color:#7fe0bd}
   .pill.linear{background:#222a3d; color:#aab8e6}
+  .pill.oncall{background:#33231a; color:#ffc59e}
   .empty{padding:40px; text-align:center; color:var(--muted)}
   .login{min-height:88vh; display:flex; align-items:center; justify-content:center}
   .login .card{max-width:430px; width:100%; text-align:center; padding:36px 30px}
@@ -173,6 +174,7 @@
               <option value="intoffline">Internal offline work with engineering</option>
               <option value="followup">Ticket follow up</option>
               <option value="linear">Linear clean up</option>
+              <option value="oncall">On call sync</option>
             </select>
           </div>
           <div>
@@ -313,6 +315,7 @@ const TYPES = {
   intoffline:{label:'Internal offline work with engineering',cls:'intoffline'},
   followup:{label:'Ticket follow up',cls:'followup'},
   linear:{label:'Linear clean up',cls:'linear'},
+  oncall:{label:'On call sync',cls:'oncall'},
 };
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
