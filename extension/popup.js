@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable__ouGswb_yT67VCufAJY-Zg_KVw5b_tv';
 const ALLOWED_DOMAIN    = 'kula.ai';
 const ADMIN_EMAILS      = ['saikausik@kula.ai'];
 
-const SHIFT_HOURS = 10, BREAK_HOURS = 1;
+const SHIFT_HOURS = 9, BREAK_HOURS = 1;
 const TARGET_SECONDS = (SHIFT_HOURS - BREAK_HOURS) * 3600;
 const TYPES = {
   issue:{label:'Issue',cls:'issue'}, call:{label:'Customer call',cls:'call'},
