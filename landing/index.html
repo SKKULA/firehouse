@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Firehouse — time & effort analytics for support teams</title>
+<meta name="description" content="See where your support team's time actually goes. Track tickets, calls, escalations and on-call by customer and activity — built for CS teams, not freelancers." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0e13; --bg2:#11141b; --panel:#161a22; --line:#262c36;
+    --text:#eef1f6; --muted:#9aa3b2; --faint:#6b7280;
+    --ember:#ff6a1a; --ember2:#ffb020;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:var(--text);
+    background:radial-gradient(1100px 600px at 75% -10%, rgba(255,106,26,.13), transparent 60%), var(--bg);
+    -webkit-font-smoothing:antialiased; line-height:1.5}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 22px}
+  a{color:inherit}
+  nav{display:flex; align-items:center; justify-content:space-between; padding:20px 22px; max-width:1040px; margin:0 auto}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:19px}
+  .logo{width:32px; height:32px; display:grid; place-items:center; border-radius:9px;
+    background:linear-gradient(160deg,var(--ember),#ff9430); box-shadow:0 4px 16px rgba(255,106,26,.5)}
+  .btn{display:inline-block; cursor:pointer; border:none; font:inherit; font-weight:700; border-radius:12px; padding:14px 22px;
+    background:linear-gradient(160deg,var(--ember),#ff8a3d); color:#fff; box-shadow:0 8px 22px rgba(255,106,26,.4); transition:.15s; text-decoration:none}
+  .btn:hover{filter:brightness(1.07); transform:translateY(-1px)}
+  .btn.ghost{background:transparent; border:1px solid var(--line); box-shadow:none; color:var(--text); font-weight:600}
+  .hero{text-align:center; padding:70px 0 50px}
+  .tag{display:inline-block; font-size:13px; font-weight:600; color:var(--ember2); background:rgba(255,176,32,.1);
+    border:1px solid rgba(255,176,32,.25); padding:6px 14px; border-radius:999px; margin-bottom:22px}
+  h1{font-size:clamp(34px,6vw,58px); font-weight:900; letter-spacing:-1.5px; line-height:1.05}
+  h1 .grad{background:linear-gradient(90deg,var(--ember),var(--ember2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .sub{max-width:640px; margin:22px auto 0; font-size:clamp(16px,2.4vw,20px); color:var(--muted)}
+  .form{display:flex; gap:10px; max-width:480px; margin:34px auto 10px; flex-wrap:wrap; justify-content:center}
+  .form input{flex:1; min-width:220px; padding:14px 16px; border-radius:12px; border:1px solid var(--line); background:var(--bg2); color:var(--text); font:inherit}
+  .form input:focus{outline:none; border-color:var(--ember)}
+  .note{font-size:13px; color:var(--faint)}
+  .ok{color:#34d399; font-weight:600}
+  section{padding:54px 0; border-top:1px solid var(--line)}
+  h2{font-size:clamp(24px,4vw,34px); font-weight:800; letter-spacing:-.5px; text-align:center}
+  .lead{text-align:center; color:var(--muted); max-width:620px; margin:14px auto 0}
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:40px}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px}
+  .card .ic{width:42px; height:42px; border-radius:11px; display:grid; place-items:center; font-size:20px;
+    background:rgba(255,106,26,.13); border:1px solid rgba(255,106,26,.25); margin-bottom:14px}
+  .card h3{font-size:17px; font-weight:700; margin-bottom:6px}
+  .card p{color:var(--muted); font-size:14.5px}
+  .who{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:36px}
+  .who .col{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px}
+  .who h4{font-size:15px; font-weight:700; margin-bottom:12px}
+  .who ul{list-style:none}
+  .who li{color:var(--muted); padding:7px 0 7px 26px; position:relative; font-size:14.5px}
+  .who li::before{content:'✓'; position:absolute; left:0; color:var(--ember2); font-weight:800}
+  .who .no li::before{content:'✕'; color:var(--faint)}
+  .price{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:38px}
+  .plan{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:26px; text-align:center}
+  .plan.fav{border-color:var(--ember); box-shadow:0 10px 30px rgba(255,106,26,.18)}
+  .plan .pname{font-weight:700; color:var(--ember2)}
+  .plan .amt{font-size:34px; font-weight:900; margin:10px 0 2px; letter-spacing:-1px}
+  .plan .per{color:var(--faint); font-size:13px}
+  .plan ul{list-style:none; margin-top:16px; text-align:left}
+  .plan li{color:var(--muted); font-size:14px; padding:6px 0 6px 22px; position:relative}
+  .plan li::before{content:'•'; position:absolute; left:6px; color:var(--ember)}
+  .cta{text-align:center; padding:64px 0}
+  footer{text-align:center; color:var(--faint); font-size:13px; padding:40px 0; border-top:1px solid var(--line)}
+  .disclaim{font-size:12px; color:var(--faint); text-align:center; margin-top:8px}
+  @media(max-width:760px){ .grid,.price{grid-template-columns:1fr} .who{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand"><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2c.5 3-1.5 4.5-3 6.5C7.4 10.6 6 12.6 6 15a6 6 0 0 0 12 0c0-1.8-.8-3.3-1.7-4.6-.3.9-1 1.6-1.9 1.6.6-2-.2-4.2-1.4-5.8C11.9 4.7 12.3 3.2 12 2Z"/></svg></span> Firehouse</div>
+  <a href="#waitlist" class="btn ghost">Join waitlist</a>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">⏱ Built for support &amp; CS teams</span>
+    <h1>See where your support team's <span class="grad">time actually goes</span></h1>
+    <p class="sub">Firehouse tracks tickets, customer calls, escalations and on-call by <b>customer</b> and <b>activity type</b> — so managers finally know what the team spends its day on. Not another freelancer timesheet.</p>
+    <form class="form" id="waitlistForm">
+      <input id="email" type="email" placeholder="you@company.com" required />
+      <button class="btn" type="submit" id="joinBtn">Get early access</button>
+    </form>
+    <p class="note" id="formNote">Join the waitlist — no spam, just an invite when it's ready.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Generic time trackers weren't built for support</h2>
+    <p class="lead">Toggl and Clockify track "time on a project." Support leaders need to know time per <b>customer</b>, per <b>ticket type</b>, and whether the day was spent firefighting or on real work.</p>
+    <div class="grid">
+      <div class="card"><div class="ic">🎯</div><h3>Activity types that fit support</h3><p>Issue, customer call, ticket troubleshooting, follow-up, escalation/on-call, Pylon &amp; Linear clean-up — not just "billable hours."</p></div>
+      <div class="card"><div class="ic">🏢</div><h3>Time by customer</h3><p>See which accounts are eating your team's hours. Spot the high-support customers before they churn — or before you under-price them.</p></div>
+      <div class="card"><div class="ic">📊</div><h3>Manager rollup</h3><p>One private view for leads: totals by agent, by customer, by activity — with date filters and CSV export. Agents only see their own time.</p></div>
+      <div class="card"><div class="ic">⚡</div><h3>One-click timer or manual log</h3><p>Start a timer that keeps running in the background, or log minutes after the fact. Pinned browser extension means zero friction.</p></div>
+      <div class="card"><div class="ic">🎚</div><h3>Daily target tracking</h3><p>Set your shift and break; every day shows tracked vs. target with a progress bar. Know who's overloaded and who's got capacity.</p></div>
+      <div class="card"><div class="ic">🔒</div><h3>Private by design</h3><p>Per-company data isolation, Google sign-in, admin-only analytics. Your team's data never mixes with anyone else's.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Who it's for</h2>
+    <div class="who">
+      <div class="col"><h4>✅ A great fit if you…</h4><ul>
+        <li>Run a support, CS, or implementation team</li>
+        <li>Want to know time-per-customer and time-per-activity</li>
+        <li>Need to justify headcount or spot overloaded agents</li>
+        <li>Live in tools like Pylon, Zendesk, Linear, Slack</li>
+      </ul></div>
+      <div class="col"><h4>🚫 Not for you if…</h4><ul class="no">
+        <li>You need invoicing &amp; client billing (use Harvest)</li>
+        <li>You're a solo freelancer tracking projects</li>
+        <li>You want employee screenshots / surveillance</li>
+        <li>You only care about dev sprint time</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Simple, team-friendly pricing</h2>
+    <p class="lead">Indicative only — we're validating. Tell us what you'd pay in the waitlist note.</p>
+    <div class="price">
+      <div class="plan"><div class="pname">Free</div><div class="amt">$0</div><div class="per">up to 3 agents</div><ul><li>Timer + manual log</li><li>Personal history</li><li>1 admin rollup</li></ul></div>
+      <div class="plan fav"><div class="pname">Team</div><div class="amt">$6</div><div class="per">per agent / month</div><ul><li>Everything in Free</li><li>Unlimited agents &amp; admins</li><li>Customer &amp; activity analytics</li><li>CSV export</li></ul></div>
+      <div class="plan"><div class="pname">Scale</div><div class="amt">Let's talk</div><div class="per">for larger orgs</div><ul><li>SSO + roles</li><li>Integrations (Pylon, Linear…)</li><li>Priority support</li></ul></div>
+    </div>
+    <p class="disclaim">Not a commitment — pricing helps us gauge interest.</p>
+  </div>
+</section>
+
+<section class="cta" id="waitlist">
+  <div class="wrap">
+    <h2>Be first in line</h2>
+    <p class="lead">We're onboarding a handful of support teams as design partners. Join the waitlist and tell us about your team.</p>
+    <form class="form" id="waitlistForm2" style="margin-top:30px">
+      <input id="email2" type="email" placeholder="you@company.com" required />
+      <input id="company2" type="text" placeholder="Company / team (optional)" />
+      <button class="btn" type="submit" id="joinBtn2">Request access</button>
+    </form>
+    <p class="note" id="formNote2">We'll email you when there's something to try.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Firehouse · time &amp; effort analytics for support teams · © 2026</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://vicfnkbsrcmemhffuqyq.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable__ouGswb_yT67VCufAJY-Zg_KVw5b_tv';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function join(email, company, noteEl, btn){
+    email = (email||'').trim();
+    if(!email || !email.includes('@')){ noteEl.textContent = 'Please enter a valid email.'; return; }
+    btn.disabled = true;
+    const { error } = await sb.from('waitlist').insert({ email, company: company||null, source: location.pathname });
+    if(error){
+      btn.disabled = false;
+      noteEl.textContent = (error.code === '23505') ? "You're already on the list — thanks!" : 'Something went wrong. Try again.';
+      console.error(error);
+      return;
+    }
+    noteEl.innerHTML = "<span class='ok'>You're on the list. 🔥 We'll be in touch.</span>";
+  }
+
+  document.getElementById('waitlistForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    join(document.getElementById('email').value, null, document.getElementById('formNote'), document.getElementById('joinBtn'));
+  });
+  document.getElementById('waitlistForm2').addEventListener('submit', e=>{
+    e.preventDefault();
+    join(document.getElementById('email2').value, document.getElementById('company2').value, document.getElementById('formNote2'), document.getElementById('joinBtn2'));
+  });
+</script>
+</body>
+</html>
