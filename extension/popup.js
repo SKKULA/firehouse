@@ -89,6 +89,7 @@ async function handleSession(session){
   $('whoAvatar').title = currentName;
   $('tabAdmin').classList.toggle('hidden', !isAdmin);
   showView('app'); showTab('track');
+  await restoreRunning();
   try { await refreshEntries(); showTab('track'); }
   catch(err){ console.error(err); alert('Signed in, but could not load entries: '+(err && err.message)); }
 }
@@ -98,16 +99,32 @@ function showView(v){
   $('appView').classList.toggle('hidden', v!=='app');
 }
 
-/* ---------- Timer ---------- */
+/* ---------- Timer (persists across popup close) ---------- */
+const RUN_KEY = 'firehouse_running';
+function persistRunning(){
+  chrome.storage.local.set({ [RUN_KEY]: { startTs, type:$('activityType').value, customer:$('customer').value, note:$('note').value } });
+}
+function clearRunning(){ chrome.storage.local.remove(RUN_KEY); }
+function showRunningUI(type, customer){
+  $('startBtn').classList.add('hidden'); $('stopBtn').classList.remove('hidden'); $('cancelBtn').classList.remove('hidden');
+  $('timerDisplay').classList.add('live'); lockInputs(true);
+  const meta=$('liveMeta'); meta.classList.remove('hidden'); meta.textContent = `${TYPES[type].label} • ${customer}`;
+  tick(); timer = setInterval(tick, 1000);
+}
+async function restoreRunning(){
+  const r = (await chrome.storage.local.get(RUN_KEY))[RUN_KEY];
+  if(!r || !r.startTs) return;
+  $('activityType').value = r.type; $('customer').value = r.customer||''; $('note').value = r.note||'';
+  startTs = r.startTs;
+  showRunningUI(r.type, r.customer||'');
+}
 function startTimer(){
   const customer = $('customer').value.trim();
   const type = $('activityType').value;
   if(!customer){ alert('Please enter the customer this activity is for.'); $('customer').focus(); return; }
   startTs = Date.now();
-  $('startBtn').classList.add('hidden'); $('stopBtn').classList.remove('hidden'); $('cancelBtn').classList.remove('hidden');
-  $('timerDisplay').classList.add('live'); lockInputs(true);
-  const meta=$('liveMeta'); meta.classList.remove('hidden'); meta.textContent = `${TYPES[type].label} • ${customer}`;
-  tick(); timer = setInterval(tick, 1000);
+  persistRunning();
+  showRunningUI(type, customer);
 }
 function tick(){ $('timerDisplay').textContent = fmt(Date.now()-startTs); }
 async function stopTimer(){
@@ -118,6 +135,7 @@ async function stopTimer(){
 }
 function cancelTimer(){ resetTimer(); }
 function resetTimer(){
+  clearRunning();
   if(timer){ clearInterval(timer); timer=null; } startTs=null;
   $('timerDisplay').textContent='00:00:00'; $('timerDisplay').classList.remove('live');
   $('startBtn').classList.remove('hidden'); $('stopBtn').classList.add('hidden'); $('cancelBtn').classList.add('hidden');
