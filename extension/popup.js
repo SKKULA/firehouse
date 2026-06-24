@@ -10,7 +10,7 @@ const ADMIN_EMAILS      = ['saikausik@kula.ai'];
 const SHIFT_HOURS = 9, BREAK_HOURS = 1;
 const TARGET_SECONDS = (SHIFT_HOURS - BREAK_HOURS) * 3600;
 const TYPES = {
-  issue:{label:'Issue',cls:'issue'}, call:{label:'Customer call',cls:'call'},
+  issue:{label:'New ticket triage/troubleshooting',cls:'issue'}, call:{label:'Customer call',cls:'call'},
   offline:{label:'Pylon Clean up',cls:'offline'}, project:{label:'Project',cls:'project'},
   demo:{label:'Demo / implementation call',cls:'demo'},
   troubleshoot:{label:'Ticket troubleshooting',cls:'troubleshoot'},
@@ -18,6 +18,7 @@ const TYPES = {
   followup:{label:'Ticket follow up',cls:'followup'},
   linear:{label:'Linear clean up',cls:'linear'},
   oncall:{label:'On call sync',cls:'oncall'},
+  closure:{label:'Ticket closure',cls:'closure'},
 };
 
 // chrome.storage-backed adapter — must match background.js so they share one session.

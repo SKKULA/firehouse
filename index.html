@@ -81,6 +81,7 @@
   .pill.followup{background:#13322a; color:#7fe0bd}
   .pill.linear{background:#222a3d; color:#aab8e6}
   .pill.oncall{background:#33231a; color:#ffc59e}
+  .pill.closure{background:#143326; color:#86e6b8}
   .empty{padding:40px; text-align:center; color:var(--muted)}
   .login{min-height:88vh; display:flex; align-items:center; justify-content:center}
   .login .card{max-width:430px; width:100%; text-align:center; padding:36px 30px}
@@ -167,7 +168,7 @@
           <div>
             <label for="activityType">Activity type</label>
             <select id="activityType" onchange="updateCustomerLabel()">
-              <option value="issue">Issue</option>
+              <option value="issue">New ticket triage/troubleshooting</option>
               <option value="call">Customer call</option>
               <option value="offline">Pylon Clean up</option>
               <option value="project">Project</option>
@@ -177,6 +178,7 @@
               <option value="followup">Ticket follow up</option>
               <option value="linear">Linear clean up</option>
               <option value="oncall">On call sync</option>
+              <option value="closure">Ticket closure</option>
             </select>
           </div>
           <div>
@@ -211,7 +213,7 @@
             <div>
               <label for="mType">Activity type</label>
               <select id="mType">
-                <option value="issue">Issue</option>
+                <option value="issue">New ticket triage/troubleshooting</option>
                 <option value="call">Customer call</option>
                 <option value="offline">Pylon Clean up</option>
                 <option value="project">Project</option>
@@ -221,6 +223,7 @@
                 <option value="followup">Ticket follow up</option>
                 <option value="linear">Linear clean up</option>
                 <option value="oncall">On call sync</option>
+                <option value="closure">Ticket closure</option>
               </select>
             </div>
           </div>
@@ -317,7 +320,7 @@ const ADMIN_EMAILS      = ['saikausik@kula.ai'];      // who can see the Manager
 const SHIFT_HOURS = 9, BREAK_HOURS = 1;
 const TARGET_SECONDS = (SHIFT_HOURS - BREAK_HOURS) * 3600;
 const TYPES = {
-  issue:{label:'Issue',cls:'issue'}, call:{label:'Customer call',cls:'call'},
+  issue:{label:'New ticket triage/troubleshooting',cls:'issue'}, call:{label:'Customer call',cls:'call'},
   offline:{label:'Pylon Clean up',cls:'offline'}, project:{label:'Project',cls:'project'},
   demo:{label:'Demo / implementation call',cls:'demo'},
   troubleshoot:{label:'Ticket troubleshooting',cls:'troubleshoot'},
@@ -325,6 +328,7 @@ const TYPES = {
   followup:{label:'Ticket follow up',cls:'followup'},
   linear:{label:'Linear clean up',cls:'linear'},
   oncall:{label:'On call sync',cls:'oncall'},
+  closure:{label:'Ticket closure',cls:'closure'},
 };
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

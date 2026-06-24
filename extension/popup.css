@@ -67,6 +67,7 @@ tr:last-child td{border-bottom:none}
 .pill.followup{background:#13322a; color:#7fe0bd}
 .pill.linear{background:#222a3d; color:#aab8e6}
 .pill.oncall{background:#33231a; color:#ffc59e}
+.pill.closure{background:#143326; color:#86e6b8}
 .empty{padding:28px; text-align:center; color:var(--muted); font-size:13px}
 .login{height:100%; display:flex; align-items:center; justify-content:center; padding:18px}
 .login .card{max-width:340px; width:100%; text-align:center; padding:26px 22px; margin:0}
