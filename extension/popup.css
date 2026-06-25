@@ -86,6 +86,19 @@ tr:last-child td{border-bottom:none}
 .small{font-size:12px}
 .toolbar{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px}
 .banner{padding:10px 13px; border-radius:10px; background:#3a1c24; color:#ffb3c0; margin-bottom:14px; font-size:13px}
+.fire-burst{position:fixed; left:50%; top:50%; font-size:72px; z-index:9999; pointer-events:none;
+  filter:drop-shadow(0 8px 22px rgba(255,106,26,.65)); animation:firepop 1.15s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes firepop{
+  0%{opacity:0; transform:translate(-50%,-20%) scale(.3) rotate(-8deg)}
+  22%{opacity:1; transform:translate(-50%,-50%) scale(1.18) rotate(4deg)}
+  40%{transform:translate(-50%,-50%) scale(1) rotate(-2deg)}
+  100%{opacity:0; transform:translate(-50%,-150%) scale(1.05) rotate(0)}
+}
+.fire-toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:9999; pointer-events:none;
+  background:linear-gradient(160deg,#1d222c,#11141b); border:1px solid var(--line); color:var(--text);
+  padding:8px 16px; border-radius:999px; font-weight:600; font-size:13px; box-shadow:var(--shadow);
+  animation:toastin 1.6s ease forwards}
+@keyframes toastin{0%{opacity:0; transform:translateX(-50%) translateY(10px)}15%,75%{opacity:1; transform:translateX(-50%) translateY(0)}100%{opacity:0; transform:translateX(-50%) translateY(6px)}}
 .bar-wrap{display:flex; align-items:center; gap:8px}
 .bar-track{flex:1; height:7px; background:var(--line); border-radius:999px; overflow:hidden; min-width:40px}
 .bar-fill{height:100%; background:linear-gradient(90deg,var(--ember),var(--ember2)); border-radius:999px}

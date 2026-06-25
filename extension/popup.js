@@ -132,7 +132,7 @@ async function stopTimer(){
   const elapsed = Date.now() - startTs;
   const ok = await addEntry({ type:$('activityType').value, customer:$('customer').value.trim(),
     note:$('note').value.trim(), start:startTs, end:Date.now(), seconds:Math.round(elapsed/1000) });
-  if(ok){ resetTimer(); renderToday(); }
+  if(ok){ resetTimer(); renderToday(); fireBurst('Logged'); }
 }
 function cancelTimer(){ resetTimer(); }
 function resetTimer(){
@@ -161,7 +161,15 @@ async function saveManual(){
   if(!customer){ alert('Please enter the customer this activity is for.'); return; }
   const s = new Date(`${date}T12:00`).getTime(); const seconds = Math.round(amount*(unit==='hours'?3600:60));
   const ok = await addEntry({ type:$('mType').value, customer, note:$('mNote').value.trim(), start:s, end:s+seconds*1000, seconds, manual:true });
-  if(ok){ ['mAmount','mCustomer','mNote'].forEach(id=>$(id).value=''); renderToday(); alert('Entry saved.'); }
+  if(ok){ ['mAmount','mCustomer','mNote'].forEach(id=>$(id).value=''); renderToday(); fireBurst('Logged'); }
+}
+
+/* ---------- Fire confirmation ---------- */
+function fireBurst(msg){
+  const f=document.createElement('div'); f.className='fire-burst'; f.textContent='🔥';
+  document.body.appendChild(f); setTimeout(()=>f.remove(), 1200);
+  if(msg){ const t=document.createElement('div'); t.className='fire-toast'; t.textContent=msg;
+    document.body.appendChild(t); setTimeout(()=>t.remove(), 1700); }
 }
 
 /* ---------- Formatting ---------- */
