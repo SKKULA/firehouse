@@ -166,7 +166,8 @@ async function saveManual(){
 
 /* ---------- Fire confirmation ---------- */
 function fireBurst(msg){
-  const f=document.createElement('div'); f.className='fire-burst'; f.textContent='🔥';
+  const f=document.createElement('div'); f.className='fire-burst';
+  f.innerHTML='<span class="flame">🔥</span>';
   document.body.appendChild(f); setTimeout(()=>f.remove(), 2900);
   if(msg){ const t=document.createElement('div'); t.className='fire-toast'; t.textContent=msg;
     document.body.appendChild(t); setTimeout(()=>t.remove(), 3100); }
