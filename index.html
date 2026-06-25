@@ -101,18 +101,20 @@
   .toolbar{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px}
   .banner{padding:12px 16px; border-radius:11px; background:#3a1c24; color:#ffb3c0; margin-bottom:16px; font-size:14px}
   .fire-burst{position:fixed; left:50%; top:50%; font-size:96px; z-index:9999; pointer-events:none;
-    filter:drop-shadow(0 10px 28px rgba(255,106,26,.65)); animation:firepop 1.15s cubic-bezier(.2,.8,.2,1) forwards}
+    filter:drop-shadow(0 10px 28px rgba(255,106,26,.65)); animation:firepop 2.8s cubic-bezier(.2,.8,.2,1) forwards}
   @keyframes firepop{
     0%{opacity:0; transform:translate(-50%,-20%) scale(.3) rotate(-8deg)}
-    22%{opacity:1; transform:translate(-50%,-50%) scale(1.18) rotate(4deg)}
-    40%{transform:translate(-50%,-50%) scale(1) rotate(-2deg)}
-    100%{opacity:0; transform:translate(-50%,-165%) scale(1.05) rotate(0)}
+    10%{opacity:1; transform:translate(-50%,-50%) scale(1.18) rotate(4deg)}
+    18%{transform:translate(-50%,-50%) scale(1) rotate(-2deg)}
+    30%{transform:translate(-50%,-50%) scale(1.06) rotate(2deg)}
+    72%{opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0)}
+    100%{opacity:0; transform:translate(-50%,-150%) scale(1.05) rotate(0)}
   }
   .fire-toast{position:fixed; left:50%; bottom:40px; transform:translateX(-50%); z-index:9999; pointer-events:none;
     background:linear-gradient(160deg,#1d222c,#11141b); border:1px solid var(--line); color:var(--text);
     padding:10px 18px; border-radius:999px; font-weight:600; font-size:14px; box-shadow:var(--shadow);
-    animation:toastin 1.6s ease forwards}
-  @keyframes toastin{0%{opacity:0; transform:translateX(-50%) translateY(12px)}15%,75%{opacity:1; transform:translateX(-50%) translateY(0)}100%{opacity:0; transform:translateX(-50%) translateY(8px)}}
+    animation:toastin 3s ease forwards}
+  @keyframes toastin{0%{opacity:0; transform:translateX(-50%) translateY(12px)}8%,85%{opacity:1; transform:translateX(-50%) translateY(0)}100%{opacity:0; transform:translateX(-50%) translateY(8px)}}
   .bar-wrap{display:flex; align-items:center; gap:10px}
   .bar-track{flex:1; height:8px; background:var(--line); border-radius:999px; overflow:hidden; min-width:60px}
   .bar-fill{height:100%; background:linear-gradient(90deg,var(--ember),var(--ember2)); border-radius:999px}
@@ -505,9 +507,9 @@ async function saveManual(){
 /* ---------- Fire confirmation ---------- */
 function fireBurst(msg){
   const f=document.createElement('div'); f.className='fire-burst'; f.textContent='🔥';
-  document.body.appendChild(f); setTimeout(()=>f.remove(), 1200);
+  document.body.appendChild(f); setTimeout(()=>f.remove(), 2900);
   if(msg){ const t=document.createElement('div'); t.className='fire-toast'; t.textContent=msg;
-    document.body.appendChild(t); setTimeout(()=>t.remove(), 1700); }
+    document.body.appendChild(t); setTimeout(()=>t.remove(), 3100); }
 }
 
 /* ---------- Formatting ---------- */

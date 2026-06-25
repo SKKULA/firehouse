@@ -167,9 +167,9 @@ async function saveManual(){
 /* ---------- Fire confirmation ---------- */
 function fireBurst(msg){
   const f=document.createElement('div'); f.className='fire-burst'; f.textContent='🔥';
-  document.body.appendChild(f); setTimeout(()=>f.remove(), 1200);
+  document.body.appendChild(f); setTimeout(()=>f.remove(), 2900);
   if(msg){ const t=document.createElement('div'); t.className='fire-toast'; t.textContent=msg;
-    document.body.appendChild(t); setTimeout(()=>t.remove(), 1700); }
+    document.body.appendChild(t); setTimeout(()=>t.remove(), 3100); }
 }
 
 /* ---------- Formatting ---------- */
