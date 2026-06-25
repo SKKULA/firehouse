@@ -249,12 +249,17 @@ async function delEntry(id){ if(!confirm('Delete this entry?')) return; await de
 
 /* ---------- Admin ---------- */
 function onRangeChange(){ $('customRange').classList.toggle('hidden', $('adminRange').value!=='custom'); renderAdmin(); }
+function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x.getTime(); }
 function startOfWeek(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-day); return x.getTime(); }
+const DAY_MS = 86400000;
 function rangeFilter(entries){
   const r = $('adminRange') ? $('adminRange').value : 'all';
   if(r==='all') return entries;
   if(r==='today') return entries.filter(e=>isToday(e.start));
+  if(r==='yesterday'){ const s=startOfDay(Date.now())-DAY_MS, e=startOfDay(Date.now())-1; return entries.filter(x=>x.start>=s && x.start<=e); }
   if(r==='week'){ const s=startOfWeek(new Date()); return entries.filter(e=>e.start>=s); }
+  if(r==='lastweek'){ const tw=startOfWeek(new Date()); const s=tw-7*DAY_MS, e=tw-1; return entries.filter(x=>x.start>=s && x.start<=e); }
+  if(r==='last30'){ const s=startOfDay(Date.now())-29*DAY_MS; return entries.filter(x=>x.start>=s); }
   if(r==='custom'){
     const f=$('adminFrom').value, t=$('adminTo').value;
     const fs=f?new Date(f+'T00:00').getTime():-Infinity, ts=t?new Date(t+'T23:59:59').getTime():Infinity;

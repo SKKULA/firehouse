@@ -40,6 +40,9 @@ button:disabled{opacity:.45; cursor:not-allowed}
 label{display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:6px; font-weight:600}
 input,select{width:100%; padding:10px 11px; border-radius:10px; border:1px solid var(--line); background:var(--bg2); color:var(--text); font:inherit; transition:.15s}
 input:focus,select:focus{outline:none; border-color:var(--ember); box-shadow:0 0 0 3px var(--ember-soft)}
+input[type=date]{color-scheme:dark}
+input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer; opacity:1;
+  filter:invert(53%) sepia(81%) saturate(2473%) hue-rotate(346deg) brightness(101%) contrast(101%)}
 input::placeholder{color:var(--faint)}
 .grid{display:grid; gap:12px}
 .grid.two{grid-template-columns:1fr}

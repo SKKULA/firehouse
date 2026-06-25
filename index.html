@@ -52,6 +52,9 @@
   label{display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin-bottom:7px; font-weight:600}
   input,select{width:100%; padding:12px 13px; border-radius:11px; border:1px solid var(--line); background:var(--bg2); color:var(--text); font:inherit; transition:.15s}
   input:focus,select:focus{outline:none; border-color:var(--ember); box-shadow:0 0 0 3px var(--ember-soft)}
+  input[type=date]{color-scheme:dark}
+  input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer; opacity:1;
+    filter:invert(53%) sepia(81%) saturate(2473%) hue-rotate(346deg) brightness(101%) contrast(101%)}
   input::placeholder{color:var(--faint)}
   .grid{display:grid; gap:14px}
   .grid.two{grid-template-columns:1fr 1fr}
@@ -301,7 +304,10 @@
             <select id="adminRange" onchange="onRangeChange()">
               <option value="all">All time</option>
               <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
               <option value="week">This week</option>
+              <option value="lastweek">Last week</option>
+              <option value="last30">Last 30 days</option>
               <option value="custom">Custom…</option>
             </select>
           </div>
@@ -599,12 +605,17 @@ function onRangeChange(){
   document.getElementById('customRange').classList.toggle('hidden', document.getElementById('adminRange').value!=='custom');
   renderAdmin();
 }
+function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x.getTime(); }
 function startOfWeek(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-day); return x.getTime(); }
+const DAY_MS = 86400000;
 function rangeFilter(entries){
   const r = document.getElementById('adminRange') ? document.getElementById('adminRange').value : 'all';
   if(r==='all') return entries;
   if(r==='today') return entries.filter(e=>isToday(e.start));
+  if(r==='yesterday'){ const s=startOfDay(Date.now())-DAY_MS, e=startOfDay(Date.now())-1; return entries.filter(x=>x.start>=s && x.start<=e); }
   if(r==='week'){ const s=startOfWeek(new Date()); return entries.filter(e=>e.start>=s); }
+  if(r==='lastweek'){ const tw=startOfWeek(new Date()); const s=tw-7*DAY_MS, e=tw-1; return entries.filter(x=>x.start>=s && x.start<=e); }
+  if(r==='last30'){ const s=startOfDay(Date.now())-29*DAY_MS; return entries.filter(x=>x.start>=s); }
   if(r==='custom'){
     const f=document.getElementById('adminFrom').value, t=document.getElementById('adminTo').value;
     const fs=f?new Date(f+'T00:00').getTime():-Infinity, ts=t?new Date(t+'T23:59:59').getTime():Infinity;
