@@ -278,13 +278,9 @@ The current app is **single-tenant** (one company). To sell it, the big change i
 8. **Different ID per teammate** — unpacked installs get random IDs. Pin a `key` in the manifest.
 9. **Timezone date shifts** — manual entries anchored at noon; to bulk-shift dates use a SQL
    `UPDATE` computing whole-day offsets in the user's timezone (`at time zone 'Asia/Kolkata'`).
-10. **Night shifts cross local midnight** — an India 8 PM–5 AM shift splits across two calendar
-    days, so the daily target never registers. Fix: bucket every "work day" by a **business
-    timezone** (`BUSINESS_TZ='America/Los_Angeles'`) instead of the viewer's local midnight — a
-    night shift in IST is a normal daytime shift in PT, so it lands on one business day. Implement
-    `dayKey/isToday/fmtTime/fmtDate/dayLabel` via `Intl.DateTimeFormat({timeZone})`, filter
-    week/custom ranges on the `YYYY-MM-DD` keys (string compare), and anchor manual entries at
-    `20:00Z` (always midday on the same PT date).
+   (Note: day-grouping uses each viewer's *local* date. A single fixed business timezone can't
+   keep both an IST-daytime and a PT-daytime shift on one day — they're ~12h apart; the real fix
+   for mixed shifts is a **per-user work timezone**, not one global one.)
 
 ---
 

@@ -9,10 +9,6 @@ const ADMIN_EMAILS      = ['saikausik@kula.ai'];
 
 const SHIFT_HOURS = 9, BREAK_HOURS = 1;
 const TARGET_SECONDS = (SHIFT_HOURS - BREAK_HOURS) * 3600;
-// Bucket all "work days" by this business timezone so shifts crossing local
-// midnight (e.g. India night shift) still land on one business day.
-const BUSINESS_TZ = 'America/Los_Angeles';
-const TZ_LABEL = 'PT';
 const TYPES = {
   issue:{label:'New ticket triage/troubleshooting',cls:'issue'}, call:{label:'Customer call',cls:'call'},
   offline:{label:'Pylon Clean up',cls:'offline'}, project:{label:'Project',cls:'project'},
@@ -163,7 +159,7 @@ async function saveManual(){
   if(!date){ alert('Please pick a date.'); return; }
   if(!amount || amount<=0){ alert('Please enter how much time you spent.'); return; }
   if(!customer){ alert('Please enter the customer this activity is for.'); return; }
-  const s = new Date(`${date}T20:00:00Z`).getTime(); const seconds = Math.round(amount*(unit==='hours'?3600:60));
+  const s = new Date(`${date}T12:00`).getTime(); const seconds = Math.round(amount*(unit==='hours'?3600:60));
   const ok = await addEntry({ type:$('mType').value, customer, note:$('mNote').value.trim(), start:s, end:s+seconds*1000, seconds, manual:true });
   if(ok){ ['mAmount','mCustomer','mNote'].forEach(id=>$(id).value=''); renderToday(); alert('Entry saved.'); }
 }
@@ -172,13 +168,11 @@ async function saveManual(){
 function fmt(ms){ const s=Math.floor(ms/1000); return `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
 function fmtDur(seconds){ const h=Math.floor(seconds/3600), m=Math.floor((seconds%3600)/60); if(h>0)return `${h}h ${m}m`; if(m>0)return `${m}m`; return `${seconds}s`; }
 function fmtHM(seconds){ const h=Math.floor(seconds/3600), m=Math.round((seconds%3600)/60); return `${h}h ${String(m).padStart(2,'0')}m`; }
-function dayKey(ts){ return new Intl.DateTimeFormat('en-CA',{timeZone:BUSINESS_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ts)); }
-function isToday(ts){ return dayKey(ts)===dayKey(Date.now()); }
-function fmtTime(ts){ return new Intl.DateTimeFormat('en-US',{timeZone:BUSINESS_TZ,hour:'2-digit',minute:'2-digit'}).format(new Date(ts)); }
-function fmtDate(ts){ return new Intl.DateTimeFormat('en-US',{timeZone:BUSINESS_TZ,month:'short',day:'numeric'}).format(new Date(ts)); }
-function dayLabel(ts){ return new Intl.DateTimeFormat('en-US',{timeZone:BUSINESS_TZ,weekday:'short',month:'short',day:'numeric',year:'numeric'}).format(new Date(ts)); }
-function addDaysToKey(key, delta){ const d=new Date(key+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+delta); return d.toISOString().slice(0,10); }
-function ptWeekday(ts){ const wd=new Intl.DateTimeFormat('en-US',{timeZone:BUSINESS_TZ,weekday:'short'}).format(new Date(ts)); return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].indexOf(wd); }
+function isToday(ts){ const d=new Date(ts), n=new Date(); return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate(); }
+function fmtTime(ts){ return new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString([], {month:'short',day:'numeric'}); }
+function dayKey(ts){ const d=new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dayLabel(ts){ return new Date(ts).toLocaleDateString([], {weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
 
 /* ---------- Tabs ---------- */
 function showTab(tab){
@@ -246,14 +240,16 @@ async function delEntry(id){ if(!confirm('Delete this entry?')) return; await de
 
 /* ---------- Admin ---------- */
 function onRangeChange(){ $('customRange').classList.toggle('hidden', $('adminRange').value!=='custom'); renderAdmin(); }
+function startOfWeek(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-day); return x.getTime(); }
 function rangeFilter(entries){
   const r = $('adminRange') ? $('adminRange').value : 'all';
   if(r==='all') return entries;
-  if(r==='today'){ const today=dayKey(Date.now()); return entries.filter(e=>dayKey(e.start)===today); }
-  if(r==='week'){ const weekStart=addDaysToKey(dayKey(Date.now()), -ptWeekday(Date.now())); return entries.filter(e=>dayKey(e.start)>=weekStart); }
+  if(r==='today') return entries.filter(e=>isToday(e.start));
+  if(r==='week'){ const s=startOfWeek(new Date()); return entries.filter(e=>e.start>=s); }
   if(r==='custom'){
     const f=$('adminFrom').value, t=$('adminTo').value;
-    return entries.filter(e=>{ const k=dayKey(e.start); return (!f||k>=f) && (!t||k<=t); });
+    const fs=f?new Date(f+'T00:00').getTime():-Infinity, ts=t?new Date(t+'T23:59:59').getTime():Infinity;
+    return entries.filter(e=>e.start>=fs && e.start<=ts);
   }
   return entries;
 }
