@@ -219,6 +219,7 @@
         <div class="timer" id="timerDisplay">00:00:00</div>
         <div class="row" style="justify-content:center">
           <button id="startBtn" class="primary" onclick="startTimer()">▶ Start</button>
+          <button id="pauseBtn" class="ghost hidden" onclick="togglePause()">⏸ Pause</button>
           <button id="stopBtn" class="danger hidden" onclick="stopTimer()">■ Stop &amp; log</button>
           <button id="cancelBtn" class="ghost hidden" onclick="cancelTimer()">Discard</button>
         </div>
@@ -365,7 +366,10 @@ let currentUser = null;   // email
 let currentName = null;   // display name
 let isAdmin = false;
 let entriesCache = [];
-let timer = null, startTs = null;
+let timer = null;        // interval id
+let origStartTs = null;  // when the timer was first started (entry.start)
+let accumMs = 0;         // elapsed accumulated across paused segments
+let segStart = null;     // start of the current running segment; null = paused
 
 /* ---------- Data layer (Supabase) ---------- */
 function loadEntries(){ return entriesCache; }
@@ -446,13 +450,15 @@ function showView(v){
   document.getElementById('appView').classList.toggle('hidden', v!=='app');
 }
 
-/* ---------- Timer ---------- */
+/* ---------- Timer (with pause/resume) ---------- */
+function elapsedMs(){ return accumMs + (segStart!==null ? Date.now()-segStart : 0); }
 function startTimer(){
   const customer = document.getElementById('customer').value.trim();
   const type = document.getElementById('activityType').value;
   if(!customer){ alert('Please enter the customer this activity is for.'); document.getElementById('customer').focus(); return; }
-  startTs = Date.now();
+  origStartTs = Date.now(); accumMs = 0; segStart = Date.now();
   document.getElementById('startBtn').classList.add('hidden');
+  document.getElementById('pauseBtn').classList.remove('hidden');
   document.getElementById('stopBtn').classList.remove('hidden');
   document.getElementById('cancelBtn').classList.remove('hidden');
   document.getElementById('timerDisplay').classList.add('live');
@@ -460,26 +466,50 @@ function startTimer(){
   const meta = document.getElementById('liveMeta');
   meta.classList.remove('hidden');
   meta.textContent = `${TYPES[type].label} • ${customer}`;
+  setPauseBtn(false);
   tick(); timer = setInterval(tick, 1000);
 }
-function tick(){ document.getElementById('timerDisplay').textContent = fmt(Date.now()-startTs); }
+function tick(){ document.getElementById('timerDisplay').textContent = fmt(elapsedMs()); }
+function setPauseBtn(paused){
+  document.getElementById('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause';
+}
+function togglePause(){ if(segStart===null) resumeTimer(); else pauseTimer(); }
+function pauseTimer(){
+  if(segStart===null) return;
+  accumMs += Date.now()-segStart; segStart=null;
+  if(timer){ clearInterval(timer); timer=null; }
+  document.getElementById('timerDisplay').classList.remove('live');
+  setPauseBtn(true);
+  const meta = document.getElementById('liveMeta');
+  if(meta && !/ \(paused\)$/.test(meta.textContent)) meta.textContent += ' (paused)';
+  tick();
+}
+function resumeTimer(){
+  segStart = Date.now();
+  document.getElementById('timerDisplay').classList.add('live');
+  setPauseBtn(false);
+  const meta = document.getElementById('liveMeta');
+  if(meta) meta.textContent = meta.textContent.replace(/ \(paused\)$/,'');
+  tick(); timer = setInterval(tick, 1000);
+}
 async function stopTimer(){
-  const elapsed = Date.now() - startTs;
+  const totalMs = elapsedMs();
   const ok = await addEntry({
     type: document.getElementById('activityType').value,
     customer: document.getElementById('customer').value.trim(),
     note: document.getElementById('note').value.trim(),
-    start: startTs, end: Date.now(), seconds: Math.round(elapsed/1000),
+    start: origStartTs, end: origStartTs+totalMs, seconds: Math.round(totalMs/1000),
   });
   if(ok){ resetTimer(); renderToday(); fireBurst('Logged'); }
 }
 function cancelTimer(){ resetTimer(); }
 function resetTimer(){
   if(timer){ clearInterval(timer); timer=null; }
-  startTs=null;
+  origStartTs=null; accumMs=0; segStart=null;
   document.getElementById('timerDisplay').textContent='00:00:00';
   document.getElementById('timerDisplay').classList.remove('live');
   document.getElementById('startBtn').classList.remove('hidden');
+  document.getElementById('pauseBtn').classList.add('hidden');
   document.getElementById('stopBtn').classList.add('hidden');
   document.getElementById('cancelBtn').classList.add('hidden');
   document.getElementById('liveMeta').classList.add('hidden');

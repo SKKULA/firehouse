@@ -33,7 +33,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 const $ = (id) => document.getElementById(id);
 let currentUser = null, currentName = null, isAdmin = false;
-let entriesCache = [], timer = null, startTs = null, booted = false;
+let entriesCache = [], timer = null, booted = false;
+let origStartTs = null, accumMs = 0, segStart = null;
 
 /* ---------- Data ---------- */
 function loadEntries(){ return entriesCache; }
@@ -100,46 +101,69 @@ function showView(v){
   $('appView').classList.toggle('hidden', v!=='app');
 }
 
-/* ---------- Timer (persists across popup close) ---------- */
+/* ---------- Timer (pause/resume, persists across popup close) ---------- */
 const RUN_KEY = 'firehouse_running';
+function elapsedMs(){ return accumMs + (segStart!==null ? Date.now()-segStart : 0); }
 function persistRunning(){
-  chrome.storage.local.set({ [RUN_KEY]: { startTs, type:$('activityType').value, customer:$('customer').value, note:$('note').value } });
+  chrome.storage.local.set({ [RUN_KEY]: { origStartTs, accumMs, segStart, type:$('activityType').value, customer:$('customer').value, note:$('note').value } });
 }
 function clearRunning(){ chrome.storage.local.remove(RUN_KEY); }
+function setPauseBtn(paused){ $('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause'; }
 function showRunningUI(type, customer){
-  $('startBtn').classList.add('hidden'); $('stopBtn').classList.remove('hidden'); $('cancelBtn').classList.remove('hidden');
-  $('timerDisplay').classList.add('live'); lockInputs(true);
-  const meta=$('liveMeta'); meta.classList.remove('hidden'); meta.textContent = `${TYPES[type].label} • ${customer}`;
-  tick(); timer = setInterval(tick, 1000);
+  $('startBtn').classList.add('hidden'); $('pauseBtn').classList.remove('hidden');
+  $('stopBtn').classList.remove('hidden'); $('cancelBtn').classList.remove('hidden');
+  lockInputs(true);
+  const paused = segStart===null;
+  $('timerDisplay').classList.toggle('live', !paused);
+  setPauseBtn(paused);
+  const meta=$('liveMeta'); meta.classList.remove('hidden');
+  meta.textContent = `${TYPES[type].label} • ${customer}` + (paused ? ' (paused)' : '');
+  tick(); if(!paused) timer = setInterval(tick, 1000);
 }
 async function restoreRunning(){
   const r = (await chrome.storage.local.get(RUN_KEY))[RUN_KEY];
-  if(!r || !r.startTs) return;
+  if(!r || r.origStartTs==null) return;
   $('activityType').value = r.type; $('customer').value = r.customer||''; $('note').value = r.note||'';
-  startTs = r.startTs;
+  origStartTs = r.origStartTs; accumMs = r.accumMs||0; segStart = (r.segStart!=null) ? r.segStart : null;
   showRunningUI(r.type, r.customer||'');
 }
 function startTimer(){
   const customer = $('customer').value.trim();
   const type = $('activityType').value;
   if(!customer){ alert('Please enter the customer this activity is for.'); $('customer').focus(); return; }
-  startTs = Date.now();
+  origStartTs = Date.now(); accumMs = 0; segStart = Date.now();
   persistRunning();
   showRunningUI(type, customer);
 }
-function tick(){ $('timerDisplay').textContent = fmt(Date.now()-startTs); }
+function tick(){ $('timerDisplay').textContent = fmt(elapsedMs()); }
+function togglePause(){ if(segStart===null) resumeTimer(); else pauseTimer(); }
+function pauseTimer(){
+  if(segStart===null) return;
+  accumMs += Date.now()-segStart; segStart=null;
+  if(timer){ clearInterval(timer); timer=null; }
+  $('timerDisplay').classList.remove('live'); setPauseBtn(true);
+  const meta=$('liveMeta'); if(meta && !/ \(paused\)$/.test(meta.textContent)) meta.textContent += ' (paused)';
+  persistRunning(); tick();
+}
+function resumeTimer(){
+  segStart = Date.now();
+  $('timerDisplay').classList.add('live'); setPauseBtn(false);
+  const meta=$('liveMeta'); if(meta) meta.textContent = meta.textContent.replace(/ \(paused\)$/,'');
+  persistRunning(); tick(); timer = setInterval(tick, 1000);
+}
 async function stopTimer(){
-  const elapsed = Date.now() - startTs;
+  const totalMs = elapsedMs();
   const ok = await addEntry({ type:$('activityType').value, customer:$('customer').value.trim(),
-    note:$('note').value.trim(), start:startTs, end:Date.now(), seconds:Math.round(elapsed/1000) });
+    note:$('note').value.trim(), start:origStartTs, end:origStartTs+totalMs, seconds:Math.round(totalMs/1000) });
   if(ok){ resetTimer(); renderToday(); fireBurst('Logged'); }
 }
 function cancelTimer(){ resetTimer(); }
 function resetTimer(){
   clearRunning();
-  if(timer){ clearInterval(timer); timer=null; } startTs=null;
+  if(timer){ clearInterval(timer); timer=null; } origStartTs=null; accumMs=0; segStart=null;
   $('timerDisplay').textContent='00:00:00'; $('timerDisplay').classList.remove('live');
-  $('startBtn').classList.remove('hidden'); $('stopBtn').classList.add('hidden'); $('cancelBtn').classList.add('hidden');
+  $('startBtn').classList.remove('hidden'); $('pauseBtn').classList.add('hidden');
+  $('stopBtn').classList.add('hidden'); $('cancelBtn').classList.add('hidden');
   $('liveMeta').classList.add('hidden'); $('customer').value=''; $('note').value=''; lockInputs(false);
 }
 function lockInputs(on){ ['activityType','customer','note'].forEach(id=>$(id).disabled=on); }
@@ -334,6 +358,7 @@ $('signOutBtn').addEventListener('click', signOut);
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click', ()=>showTab(b.dataset.tab)));
 $('activityType').addEventListener('change', updateCustomerLabel);
 $('startBtn').addEventListener('click', startTimer);
+$('pauseBtn').addEventListener('click', togglePause);
 $('stopBtn').addEventListener('click', stopTimer);
 $('cancelBtn').addEventListener('click', cancelTimer);
 $('manualToggle').addEventListener('click', toggleManual);
